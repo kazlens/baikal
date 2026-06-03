@@ -54,18 +54,44 @@
       </h2>
 
       <div class="mobile-routes__list">
-        <button
+        <article
           v-for="route in mobileRoutes"
           :key="route.tab"
-          class="mobile-routes__button"
-          :class="{ 'mobile-routes__button--active': route.index === selectedRouteIndex }"
-          type="button"
-          :aria-pressed="route.index === selectedRouteIndex"
-          @click="$emit('selectRoute', route.index)"
+          class="mobile-route-item"
+          :class="{ 'mobile-route-item--open': isRouteOpen(route.index) }"
         >
-          <span class="mobile-routes__button-icon" aria-hidden="true" />
-          <span class="mobile-routes__button-text">{{ route.tab.toLowerCase() }}</span>
-        </button>
+          <button
+            class="mobile-routes__button"
+            :class="{ 'mobile-routes__button--active': route.index === selectedRouteIndex }"
+            type="button"
+            :aria-expanded="isRouteOpen(route.index)"
+            @click="toggleRoute(route.index)"
+          >
+            <span class="mobile-routes__button-icon" aria-hidden="true" />
+            <span class="mobile-routes__button-text">{{ route.tab.toLowerCase() }}</span>
+          </button>
+
+          <div v-if="isRouteOpen(route.index)" class="mobile-route-details">
+            <p v-if="getRouteDetails(route.index)?.intro" class="mobile-route-details__intro">
+              {{ getRouteDetails(route.index)?.intro }}
+            </p>
+
+            <article
+              v-for="item in getRouteDetails(route.index)?.items"
+              :key="item.title"
+              class="mobile-route-detail"
+            >
+              <h3 v-if="item.title" class="mobile-route-detail__title" v-html="item.title" />
+              <img
+                v-if="item.image"
+                class="mobile-route-detail__image"
+                :src="item.image"
+                :alt="item.imageAlt"
+              />
+              <p class="mobile-route-detail__text">{{ item.text }}</p>
+            </article>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -114,6 +140,10 @@
 </template>
 
 <script setup lang="ts">
+import argadaRiverImage from '~/assets/img/argada-river.jpg'
+import baikalValleyImage from '~/assets/img/baikal-valley.jpg'
+import sergePillarsImage from '~/assets/img/serge-pillars.png'
+
 type Benefit = {
   title: string
   text: string
@@ -122,6 +152,12 @@ type Benefit = {
 
 type RouteItem = {
   tab: string
+  title: string
+  tags: string[]
+  intro: string
+  image: string
+  imageAlt: string
+  text: string
 }
 
 const props = defineProps<{
@@ -130,12 +166,95 @@ const props = defineProps<{
   selectedRouteIndex: number
 }>()
 
-defineEmits<{
+type MobileRouteDetail = {
+  intro?: string
+  items: Array<{
+    title: string
+    text: string
+    image?: string
+    imageAlt?: string
+  }>
+}
+
+const emit = defineEmits<{
   selectRoute: [index: number]
 }>()
 
+const openRouteIndexes = ref<number[]>([])
+
+const isRouteOpen = (index: number) => openRouteIndexes.value.includes(index)
+
+const toggleRoute = (index: number) => {
+  emit('selectRoute', index)
+
+  openRouteIndexes.value = isRouteOpen(index)
+    ? openRouteIndexes.value.filter((routeIndex) => routeIndex !== index)
+    : [...openRouteIndexes.value, index]
+}
+
+const mobileRouteDetails: Record<number, MobileRouteDetail> = {
+  0: {
+    items: [
+      {
+        title: 'Круиз<br>«Байкальские Дюны»',
+        text: '5 дней — для тех, кто хочет увидеть Байкал ярко, но без длинного отпуска. Подходит для первого путешествия.',
+      },
+      {
+        title: '',
+        image: props.routes[0]?.image,
+        imageAlt: 'Круиз «Байкальские Дюны»',
+        text: 'Бухта Песчаная и соседняя бухта Академическая - одни из самых красивых мест на Байкале. С двух сторон бухты огибают живописные скалы – Большая и Малая Колокольня.',
+      },
+    ],
+  },
+  1: {
+    intro: '8 дней — маршрут для тех, кто хочет пройти Байкал шире: от южных точек до северных природных жемчужин.',
+    items: [
+      {
+        title: 'Круиз<br>«Вокруг Байкала<br>за 8 дней»',
+        image: props.routes[1]?.image,
+        imageAlt: 'Круиз «Вокруг Байкала за 8 дней»',
+        text: 'За 8 дней вы пройдете по Байкалу почти 1200 км. и увидите не только все основные достопримечательности, но и самые заповедные места – Байкальский музей, остров Ольхон, Скалу Шаманка, остров Огой с буддийской Ступой Просветления, Ушканьи острова, Чивыркуйский залив, Хакусы, уединенную бухту Заворотная и живописную бухту Академическая.',
+      },
+    ],
+  },
+  2: {
+    intro: '6–7 дней — много локаций, экскурсии, отдых на борту и достаточно времени, чтобы прочувствовать Байкал.',
+    items: [
+      {
+        title: 'Этно-круиз<br>«По следам кочевников»',
+        image: argadaRiverImage,
+        imageAlt: 'Этно-круиз «По следам кочевников»',
+        text: 'Во время путешествия вы познаете Байкал во всей его многогранности, познакомитесь с коренными народностями, которые проживают как на Западной стороне Байкала, так и на Восточной. Необычная атмосфера, в которую вы будете погружаться на протяжении всего времени точно не оставит никого равнодушным. Полное слияние с природой, культурой и уникальностью Прибайкалья позволит вам прочувствовать всю аутентичность священного озера Байкал.',
+      },
+      {
+        title: 'Круиз<br>«Байкальская Одиссея»',
+        image: sergePillarsImage,
+        imageAlt: 'Круиз «Байкальская Одиссея»',
+        text: 'Всего за 6 дней вы пройдете 860 км. по Байкалу и увидите главные достопримечательности озера – Байкальский музей, остров Ольхон, Скалу Шаманка, остров Огой с буддийской Ступой Просветления, Ушканьи острова, Чивыркуйский залив и живописную бухту Академическая.',
+      },
+      {
+        title: 'Круиз<br>«Осенняя симфония Байкала»',
+        image: baikalValleyImage,
+        imageAlt: 'Круиз «Осенняя симфония Байкала»',
+        text: '7-дневная круиз-экспедиция – проходит в самый разгар яркой байкальской осени. Маршрут в 870 км. включает самые знаковые места Байкала – остров Ольхон, остров Огой, Ушканьи острова, Чивыркуйский залив и бухту Академическая.',
+      },
+    ],
+  },
+  3: {
+    items: [
+      {
+        title: '',
+        text: 'Если вы не нашли подходящий круиз, мы поможем составить круиз из мест, которые вы хотите посетить.',
+      },
+    ],
+  },
+}
+
+const getRouteDetails = (index: number) => mobileRouteDetails[index]
+
 const mobileRoutes = computed(() => {
-  const order = [0, 3, 1, 2]
+  const order = [0, 2, 1, 3]
 
   return order
     .map((index) => {
@@ -345,16 +464,42 @@ const mobileRoutes = computed(() => {
 
   .mobile-routes__list {
     display: grid;
-    gap: 31px;
+    gap: 34px;
     margin-top: 42px;
+  }
+
+  .mobile-route-item {
+    display: grid;
+    gap: 0;
+    justify-self: center;
+    width: min(212px, 62vw);
+  }
+
+  .mobile-route-item:nth-child(2) {
+    width: min(304px, calc(100vw - 34px));
+    justify-self: start;
+  }
+
+  .mobile-route-item:nth-child(3) {
+    width: min(228px, 66vw);
+    justify-self: end;
+  }
+
+  .mobile-route-item:nth-child(4) {
+    width: min(359px, calc(100vw - 24px));
+    justify-self: center;
+  }
+
+  .mobile-route-item--open {
+    gap: 0;
   }
 
   .mobile-routes__button {
     display: inline-flex;
-    width: min(242px, 35vw);
+    width: 100%;
     min-height: 46px;
     align-items: center;
-    justify-self: center;
+    justify-self: stretch;
     gap: 8px;
     padding: 11px 20px;
     border: 0;
@@ -365,21 +510,22 @@ const mobileRoutes = computed(() => {
     cursor: pointer;
   }
 
-  .mobile-routes__button:nth-child(2) {
-    width: min(278px, 88vw);
-    justify-self: start;
-  }
-
-  .mobile-routes__button:nth-child(3) {
-    justify-self: end;
-  }
-
-  .mobile-routes__button:nth-child(4) {
-    width: min(278px, 88vw);
+  .mobile-route-item--open .mobile-routes__button {
+    min-height: auto;
+    //justify-content: center;
+    padding: 18px 20px 10px;
+    border-radius: 13px 13px 0 0;
+    color: #ffffff;
+    background: #214150;
+    box-shadow: none;
   }
 
   .mobile-routes__button--active {
     outline: 2px solid rgba(255, 255, 255, 0.7);
+  }
+
+  .mobile-route-item--open .mobile-routes__button--active {
+    outline: 0;
   }
 
   .mobile-routes__button-icon {
@@ -391,12 +537,68 @@ const mobileRoutes = computed(() => {
     border-left: 8px solid #000000;
   }
 
+  .mobile-route-item--open .mobile-routes__button-icon {
+    border-left-color: #ffffff;
+  }
+
   .mobile-routes__button-text {
     overflow-wrap: anywhere;
     font-size: 10px;
     font-weight: 700;
     line-height: 1.15;
     text-transform: lowercase;
+  }
+
+  .mobile-route-item--open .mobile-routes__button-text {
+    color: #ffffff;
+
+    text-transform: lowercase;
+  }
+
+  .mobile-route-details {
+    display: grid;
+    gap: 8px;
+    padding: 0 10px 18px;
+    border-radius: 0 0 13px 13px;
+    color: #ffff92;
+    background: #214150;
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.28);
+  }
+
+  .mobile-route-details__intro {
+    margin: 0;
+    color: #ffff92;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.22;
+  }
+
+  .mobile-route-detail {
+    display: grid;
+    gap: 8px;
+  }
+
+  .mobile-route-detail__title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.15;
+  }
+
+  .mobile-route-detail__text {
+    margin: 0;
+    color: #ffff92;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.2;
+  }
+
+  .mobile-route-detail__image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 5px;
+    object-fit: cover;
   }
 
   .mobile-request {

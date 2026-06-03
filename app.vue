@@ -130,10 +130,18 @@
         </div>
       </address>
     </section>
+
+    <MobilePage
+      :benefits="benefits"
+      :routes="routes"
+      :selected-route-index="selectedRouteIndex"
+      @select-route="selectRoute"
+    />
   </main>
 </template>
 
 <script setup lang="ts">
+import MobilePage from '~/components/MobilePage.vue'
 import cruiseDunesImage from '~/assets/img/cruise-5-days.png'
 import expeditionImage from '~/assets/img/route-expedition.png'
 import riverImage from '~/assets/img/route-river.jpg'
@@ -1137,6 +1145,15 @@ input:focus-visible {
   .contact__form,
   .contact__address {
     width: min(320px, calc(100% - 25.6px));
+  }
+}
+
+@media (max-width: 539px) {
+  .hero,
+  .benefits,
+  .routes,
+  .contact {
+    display: none;
   }
 }
 

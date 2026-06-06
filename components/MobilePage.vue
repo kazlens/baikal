@@ -84,16 +84,17 @@
               :class="{ 'mobile-route-item--active': route.index === selectedRouteIndex }"
             >
               <div class="mobile-route-details">
-                <p v-if="getRouteDetails(route.index)?.intro" class="mobile-route-details__intro">
-                  {{ getRouteDetails(route.index)?.intro }}
-                </p>
-
+        
                 <article
                   v-for="item in getRouteDetails(route.index)?.items"
                   :key="item.title"
                   class="mobile-route-detail"
                 >
                   <h3 v-if="item.title" class="mobile-route-detail__title" v-html="item.title" />
+                          <p v-if="getRouteDetails(route.index)?.intro" class="mobile-route-details__intro">
+                  {{ getRouteDetails(route.index)?.intro }}
+                </p>
+
                   <img
                     v-if="item.image"
                     class="mobile-route-detail__image"

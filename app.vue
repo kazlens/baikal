@@ -60,6 +60,7 @@
             :key="route.tab"
             class="routes__tab"
             :class="{ 'routes__tab--active': index === selectedRouteIndex }"
+            :style="{ '--route-tab-bg': `url(${route.tabImage})` }"
             :aria-pressed="index === selectedRouteIndex"
             type="button"
             @click="selectRoute(index)"
@@ -69,25 +70,31 @@
         </div>
 
         <div class="route-card">
-          <h3 class="route-card__title">
-            <span class="route-card__title-text">{{ selectedRoute.title }}</span>
-          </h3>
-          <div class="route-card__tags" aria-label="Характеристики маршрута">
-            <div
-              v-for="(tag, tagIndex) in selectedRoute.tags"
-              :key="tag"
-              class="route-card__tag"
-              :class="{ 'route-card__tag--primary': tagIndex === 0 }"
-            >
-              <div class="route-card__tag-text">{{ tag }}</div>
+          <article
+            v-for="card in selectedDesktopRouteCards"
+            :key="card.title"
+            class="route-card__item"
+          >
+            <h3 class="route-card__title">
+              <span class="route-card__title-text">{{ card.title }}</span>
+            </h3>
+            <div v-if="card.tags?.length" class="route-card__tags" aria-label="Характеристики маршрута">
+              <div
+                v-for="(tag, tagIndex) in card.tags"
+                :key="tag"
+                class="route-card__tag"
+                :class="{ 'route-card__tag--primary': tagIndex === 0 }"
+              >
+                <div class="route-card__tag-text">{{ tag }}</div>
+              </div>
             </div>
-          </div>
-          <p class="route-card__intro">{{ selectedRoute.intro }}</p>
-          <img class="route-card__image" :src="selectedRoute.image" :alt="selectedRoute.imageAlt" />
-          <p class="route-card__text">{{ selectedRoute.text }}</p>
+            <p v-if="card.intro" class="route-card__intro">{{ card.intro }}</p>
+            <img class="route-card__image" :src="card.image" :alt="card.imageAlt" />
+            <p v-if="card.text" class="route-card__text">{{ card.text }}</p>
+          </article>
           <div class="route-card__footer">
             <a class="button button--primary route-card__button" href="#contact">
-              <span class="route-card__button-text">Смотреть маршруты</span>
+              <span class="route-card__button-text">Узнать подробнее</span>
             </a>
           </div>
         </div>
@@ -146,6 +153,10 @@ import cruiseDunesImage from '~/assets/img/cruise-5-days.png'
 import expeditionImage from '~/assets/img/route-expedition.png'
 import riverImage from '~/assets/img/route-river.jpg'
 import cultureImage from '~/assets/img/route-culture.png'
+import argadaRiverImage from '~/assets/img/argada-river.jpg'
+import baikalValleyImage from '~/assets/img/baikal-valley.jpg'
+import heroImage from '~/assets/img/hero.jpg'
+import sergePillarsImage from '~/assets/img/serge-pillars.png'
 
 const benefits = [
   {
@@ -180,6 +191,7 @@ const routes = [
     intro: '5 дней — для тех, кто хочет увидеть Байкал ярко, но без длинного отпуска. Подходит для первого путешествия.',
     image: cruiseDunesImage,
     imageAlt: 'Бухта Песчаная на Байкале',
+    tabImage: cruiseDunesImage,
     text: 'Бухта Песчаная и соседняя бухта Академическая - одни из самых красивых мест на Байкале. С двух сторон бухты огибают живописные скалы – Большая и Малая Колокольня.',
   },
   {
@@ -189,6 +201,7 @@ const routes = [
     intro: 'Маршрут для тех, кто хочет пройти дальше классических локаций и увидеть Байкал с воды, высадок и редких природных точек.',
     image: expeditionImage,
     imageAlt: 'Экспедиционная лодка на Байкале',
+    tabImage: expeditionImage,
     text: 'В программе северные бухты, дикие берега, прогулки по воде и остановки в местах, куда сложно добраться на машине. Формат подходит для полноценного отпуска и глубокого знакомства с озером.',
   },
   {
@@ -198,6 +211,7 @@ const routes = [
     intro: 'Маршрут без перегруза: достаточно впечатлений, но остается время спокойно смотреть на воду, отдыхать на борту и гулять на берегу.',
     image: cultureImage,
     imageAlt: 'Сакральные столбы сэргэ на берегу Байкала',
+    tabImage: baikalValleyImage,
     text: 'В программе природные локации, понятные переходы, культурные остановки и свободные паузы. Это вариант для тех, кто хочет увидеть главное и не превращать отпуск в гонку.',
   },
   {
@@ -207,11 +221,69 @@ const routes = [
     intro: 'Персональный формат для семьи, компании или команды: маршрут, длительность и акценты программы собираются под ваш запрос.',
     image: riverImage,
     imageAlt: 'Живописные протоки и горы Байкальского региона',
+    tabImage: heroImage,
     text: 'Можно сделать упор на спокойный отдых, фотолокации, природные места, культурные встречи или активные высадки. Команда заранее согласует логистику, питание и комфортный ритм поездки.',
   },
 ]
 
 const selectedRoute = computed(() => routes[selectedRouteIndex.value])
+
+const desktopRouteCards = [
+  [
+    {
+      title: 'Круиз «Байкальские Дюны»',
+      tags: ['5 дней', 'бухта', 'песчаные берега', 'спокойный маршрут'],
+      intro: '5 дней — для тех, кто хочет увидеть Байкал ярко, но без длинного отпуска. Подходит для первого путешествия.',
+      image: cruiseDunesImage,
+      imageAlt: 'Бухта Песчаная на Байкале',
+      text: 'Бухта Песчаная и соседняя бухта Академическая - одни из самых красивых мест на Байкале. С двух сторон бухты огибают живописные скалы – Большая и Малая Колокольня.',
+    },
+  ],
+  [
+    {
+      title: 'Круиз «Вокруг Байкала за 8 дней»',
+      tags: ['8 дней', 'бухта', 'песчаные берега', 'спокойный маршрут'],
+      intro: '8 дней — маршрут для тех, кто хочет пройти Байкал шире: от южных точек до северных природных жемчужин.',
+      image: cruiseDunesImage,
+      imageAlt: 'Круиз «Вокруг Байкала за 8 дней»',
+      text: 'За 8 дней вы пройдёте по Байкалу почти 1200 км. и увидите не только все основные достопримечательности, но и самые заповедные места – Байкальский музей, остров Ольхон, Скалу Шаманка, остров Огой с буддийской Ступой Просветления, Ушканьи острова, Чивыркуйский залив, Хакусы, уединённую бухту Заворотная и живописную бухту Академическая.',
+    },
+  ],
+  [
+    {
+      title: 'Этно-круиз «По следам кочевников»',
+      tags: ['6 дней', 'бухта', 'река Аргада', 'сбалансированный маршрут'],
+      image: argadaRiverImage,
+      imageAlt: 'Этно-круиз «По следам кочевников»',
+      text: 'Во время путешествия вы познаете Байкал во всей его многогранности, познакомитесь с коренными народностями, которые проживают как на Западной стороне Байкала, так и на Восточной. Необычная атмосфера, в которую вы будете погружаться на протяжении всего времени точно не оставит никого равнодушным. Полное слияние с природой, культурой и уникальностью Прибайкалья позволит вам прочувствовать всю аутентичность священного озера Байкал.',
+    },
+    {
+      title: 'Круиз «Байкальская Одиссея»',
+      tags: ['7 дней', 'остров Ольхон', 'Шаманка', 'Ушканьи острова'],
+      image: sergePillarsImage,
+      imageAlt: 'Круиз «Байкальская Одиссея»',
+      text: 'Всего за 6 дней вы пройдёте 860 км. по Байкалу и увидите главные достопримечательности озера – Байкальский музей, остров Ольхон, Скалу Шаманка, остров Огой с буддийской Ступой Просветления, Ушканьи острова, Чивыркуйский залив и живописную бухту Академическая.',
+    },
+    {
+      title: 'Круиз «Осенняя симфония Байкала»',
+      tags: ['7 дней', 'остров Ольхон', 'Чивыркуйский залив', 'остров Огой'],
+      image: baikalValleyImage,
+      imageAlt: 'Круиз «Осенняя симфония Байкала»',
+      text: '7-дневная круиз-экспедиция – проходит в самый разгар яркой байкальской осени. Маршрут в 870 км. включает самые знаковые места Байкала – остров Ольхон, остров Огой, Ушканьи острова, Чивыркуйский залив и бухту Академическая.',
+    },
+  ],
+  [
+    {
+      title: 'Индивидуальный круиз',
+      intro: 'Если вы не нашли подходящий круиз, мы поможем составить круиз из мест, которые вы хотите посетить.',
+      image: heroImage,
+      imageAlt: 'Индивидуальный круиз по Байкалу',
+      text: '',
+    },
+  ],
+]
+
+const selectedDesktopRouteCards = computed(() => desktopRouteCards[selectedRouteIndex.value] ?? desktopRouteCards[0])
 
 const selectRoute = (index: number) => {
   selectedRouteIndex.value = index
@@ -603,10 +675,11 @@ input:focus-visible {
 .routes {
   display: flex;
   flex-direction: column;
-  height: 915.2px;
+  min-height: 915.2px;
   align-items: center;
   justify-content: center;
   gap: 48px;
+  padding: 72px 0;
   position: relative;
   align-self: stretch;
   width: 100%;
@@ -649,7 +722,7 @@ input:focus-visible {
 .routes__content {
   display: flex;
   width: min(1024px, calc(100% - 32px));
-  height: 656px;
+  min-height: 656px;
   align-items: flex-start;
   gap: 19.2px;
   position: relative;
@@ -663,7 +736,8 @@ input:focus-visible {
   gap: 19.2px;
   position: relative;
   z-index: 1;
-  align-self: stretch;
+  flex: 0 0 323.2px;
+  min-height: 656px;
 }
 
 .routes__tab {
@@ -679,7 +753,7 @@ input:focus-visible {
   color: #ffffff;
   background:
     linear-gradient(rgba(4, 18, 28, 0.74), rgba(4, 18, 28, 0.74)),
-    url('~/assets/img/mountains.png');
+    var(--route-tab-bg, url('~/assets/img/mountains.png'));
   background-size: cover;
   background-position: center;
   cursor: pointer;
@@ -698,7 +772,7 @@ input:focus-visible {
   border: 4px solid #ffffff;
   background:
     linear-gradient(rgba(32, 83, 94, 0.52), rgba(32, 83, 94, 0.52)),
-    url('~/assets/img/mountains.png');
+    var(--route-tab-bg, url('~/assets/img/mountains.png'));
   background-size: cover;
   background-position: center;
   box-shadow: 0 2.4px 8px rgba(0, 0, 0, 0.18);
@@ -708,33 +782,39 @@ input:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 15.2px 16.8px;
+  gap: 20px;
+  padding: 17px 16.8px 16px;
   position: relative;
   flex: 1;
-  align-self: stretch;
-  flex-grow: 1;
   background-color: #ffffff;
   border-radius: 10.4px;
   overflow: hidden;
   z-index: 1;
 }
 
+.route-card__item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  gap: 11px;
+}
+
 .route-card__title {
   position: relative;
   width: fit-content;
-  margin-top: -3.2px;
   font-weight: 400;
   color: #000000;
-  font-size: 28.8px;
+  font-size: 28px;
   letter-spacing: 0;
   line-height: normal;
+  text-align: center;
 }
 
 .route-card__title-text {
   font-weight: 400;
   color: #000000;
-  font-size: 28.8px;
+  font-size: 28px;
   letter-spacing: 0;
 }
 
@@ -742,9 +822,10 @@ input:focus-visible {
   display: inline-flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 12.8px;
+  gap: 10px;
   position: relative;
   flex: 0 0 auto;
+  flex-wrap: wrap;
 }
 
 .route-card__tag {
@@ -752,10 +833,10 @@ input:focus-visible {
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  padding: 6.4px 12.8px;
+  padding: 4px 13px;
   position: relative;
   flex: 0 0 auto;
-  border-radius: 10.4px;
+  border-radius: 999px;
 }
 
 .route-card__tag--primary {
@@ -769,12 +850,11 @@ input:focus-visible {
 .route-card__tag-text {
   position: relative;
   width: fit-content;
-  margin-top: -0.8px;
   font-weight: 500;
-  font-size: 16px;
+  font-size: 13.6px;
   text-align: center;
   letter-spacing: 0;
-  line-height: 22.4px;
+  line-height: 19px;
   white-space: nowrap;
 }
 
@@ -791,17 +871,16 @@ input:focus-visible {
   align-self: stretch;
   font-weight: 400;
   color: #1f3c58;
-  font-size: 19.2px;
+  font-size: 17px;
   letter-spacing: 0;
-  line-height: normal;
+  line-height: 1.35;
 }
 
 .route-card__image {
   position: relative;
-  flex: 1;
   align-self: stretch;
   width: 100%;
-  min-height: 0;
+  height: 306px;
   border-radius: 6.4px;
   object-fit: cover;
 }
@@ -811,9 +890,9 @@ input:focus-visible {
   align-self: stretch;
   font-weight: 400;
   color: #1f3c58;
-  font-size: 17.6px;
+  font-size: 15.6px;
   letter-spacing: 0;
-  line-height: normal;
+  line-height: 1.36;
 }
 
 .route-card__footer {
@@ -830,10 +909,11 @@ input:focus-visible {
 }
 
 .route-card__button {
-  padding: 14.4px 22.4px;
+  padding: 11px 21px;
   margin-top: -0.8px;
   margin-bottom: -0.8px;
   margin-right: -0.8px;
+  background-color: #284662;
 }
 
 .route-card__button-text {
@@ -841,11 +921,11 @@ input:focus-visible {
   align-self: stretch;
   margin-top: -0.4px;
   font-weight: 500;
-  color: #1f3c58;
-  font-size: 22.4px;
+  color: #ffffff;
+  font-size: 20px;
   text-align: center;
   letter-spacing: 0;
-  line-height: 31.36px;
+  line-height: 28px;
 }
 
 .contact {

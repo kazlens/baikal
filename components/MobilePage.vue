@@ -22,7 +22,9 @@
 
     <div class="mobile-content">
     <section class="mobile-benefits" aria-labelledby="mobile-benefits-title">
-      <h2 id="mobile-benefits-title" class="mobile-benefits__title">Почему это удобно?</h2>
+      <h2 id="mobile-benefits-title" class="mobile-benefits__title">
+        <span>Почему это </span><span class="mobile-benefits__title-accent">удобно</span><span>?</span>
+      </h2>
       <p class="mobile-benefits__subtitle">Всё главное - в одном путешествии</p>
 
       <div class="mobile-benefits__list">
@@ -53,45 +55,64 @@
         Выбери Байкал <br />под свой ритм:
       </h2>
 
-      <div class="mobile-routes__list">
-        <article
-          v-for="route in mobileRoutes"
-          :key="route.tab"
-          class="mobile-route-item"
-          :class="{ 'mobile-route-item--open': isRouteOpen(route.index) }"
-        >
-          <button
-            class="mobile-routes__button"
-            :class="{ 'mobile-routes__button--active': route.index === selectedRouteIndex }"
-            type="button"
-            :aria-expanded="isRouteOpen(route.index)"
-            @click="toggleRoute(route.index)"
-          >
-            <span class="mobile-routes__button-icon" aria-hidden="true" />
-            <span class="mobile-routes__button-text">{{ route.tab.toLowerCase() }}</span>
-          </button>
+      <div class="mobile-routes__list" aria-roledescription="carousel">
+        <button class="mobile-routes__nav mobile-routes__nav--prev" type="button" aria-label="Предыдущий маршрут" @click="showPrevRoute">
+          ‹
+        </button>
 
-          <div v-if="isRouteOpen(route.index)" class="mobile-route-details">
-            <p v-if="getRouteDetails(route.index)?.intro" class="mobile-route-details__intro">
-              {{ getRouteDetails(route.index)?.intro }}
-            </p>
-
+        <div class="mobile-routes__viewport">
+          <div class="mobile-routes__track" :style="{ transform: `translateX(-${activeMobileSlideIndex * 100}%)` }">
             <article
-              v-for="item in getRouteDetails(route.index)?.items"
-              :key="item.title"
-              class="mobile-route-detail"
+              v-for="route in mobileRoutes"
+              :key="route.tab"
+              class="mobile-route-slide"
+              :aria-hidden="route.index !== activeMobileRoute?.index"
             >
-              <h3 v-if="item.title" class="mobile-route-detail__title" v-html="item.title" />
-              <img
-                v-if="item.image"
-                class="mobile-route-detail__image"
-                :src="item.image"
-                :alt="item.imageAlt"
-              />
-              <p class="mobile-route-detail__text">{{ item.text }}</p>
+              <div
+                class="mobile-route-item"
+                :class="{ 'mobile-route-item--active': route.index === selectedRouteIndex }"
+              >
+                <div class="mobile-route-details">
+                  <p v-if="getRouteDetails(route.index)?.intro" class="mobile-route-details__intro">
+                    {{ getRouteDetails(route.index)?.intro }}
+                  </p>
+
+                  <article
+                    v-for="item in getRouteDetails(route.index)?.items"
+                    :key="item.title"
+                    class="mobile-route-detail"
+                  >
+                    <h3 v-if="item.title" class="mobile-route-detail__title" v-html="item.title" />
+                    <img
+                      v-if="item.image"
+                      class="mobile-route-detail__image"
+                      :src="item.image"
+                      :alt="item.imageAlt"
+                    />
+                    <p class="mobile-route-detail__text">{{ item.text }}</p>
+                  </article>
+                </div>
+              </div>
             </article>
           </div>
-        </article>
+        </div>
+
+        <button class="mobile-routes__nav mobile-routes__nav--next" type="button" aria-label="Следующий маршрут" @click="showNextRoute">
+          ›
+        </button>
+
+        <div class="mobile-routes__dots" aria-label="Выбор маршрута">
+          <button
+            v-for="(route, slideIndex) in mobileRoutes"
+            :key="route.tab"
+            class="mobile-routes__dot"
+            :class="{ 'mobile-routes__dot--active': slideIndex === activeMobileSlideIndex }"
+            type="button"
+            :aria-label="`Показать ${route.tab}`"
+            :aria-current="slideIndex === activeMobileSlideIndex"
+            @click="showRouteSlide(slideIndex)"
+          />
+        </div>
       </div>
     </section>
 
@@ -180,23 +201,13 @@ const emit = defineEmits<{
   selectRoute: [index: number]
 }>()
 
-const openRouteIndexes = ref<number[]>([])
-
-const isRouteOpen = (index: number) => openRouteIndexes.value.includes(index)
-
-const toggleRoute = (index: number) => {
-  emit('selectRoute', index)
-
-  openRouteIndexes.value = isRouteOpen(index)
-    ? openRouteIndexes.value.filter((routeIndex) => routeIndex !== index)
-    : [...openRouteIndexes.value, index]
-}
+const activeMobileSlideIndex = ref(1)
 
 const mobileRouteDetails: Record<number, MobileRouteDetail> = {
   0: {
     items: [
       {
-        title: 'Круиз<br>«Байкальские Дюны»',
+        title: 'Круиз «Байкальские Дюны»',
         text: '5 дней — для тех, кто хочет увидеть Байкал ярко, но без длинного отпуска. Подходит для первого путешествия.',
       },
       {
@@ -254,7 +265,7 @@ const mobileRouteDetails: Record<number, MobileRouteDetail> = {
 const getRouteDetails = (index: number) => mobileRouteDetails[index]
 
 const mobileRoutes = computed(() => {
-  const order = [0, 2, 1, 3]
+  const order = [2, 0, 1]
 
   return order
     .map((index) => {
@@ -263,6 +274,48 @@ const mobileRoutes = computed(() => {
     })
     .filter((route): route is RouteItem & { index: number } => route !== null)
 })
+
+const activeMobileRoute = computed(() => mobileRoutes.value[activeMobileSlideIndex.value])
+
+const showRouteSlide = (slideIndex: number) => {
+  if (!mobileRoutes.value.length) {
+    return
+  }
+
+  const maxIndex = mobileRoutes.value.length - 1
+  activeMobileSlideIndex.value = Math.min(Math.max(slideIndex, 0), maxIndex)
+
+  const route = activeMobileRoute.value
+  if (route) {
+    emit('selectRoute', route.index)
+  }
+}
+
+const showPrevRoute = () => {
+  if (!mobileRoutes.value.length) {
+    return
+  }
+
+  showRouteSlide((activeMobileSlideIndex.value - 1 + mobileRoutes.value.length) % mobileRoutes.value.length)
+}
+
+const showNextRoute = () => {
+  if (!mobileRoutes.value.length) {
+    return
+  }
+
+  showRouteSlide((activeMobileSlideIndex.value + 1) % mobileRoutes.value.length)
+}
+
+watch(
+  () => props.selectedRouteIndex,
+  (index) => {
+    const slideIndex = mobileRoutes.value.findIndex((route) => route.index === index)
+    if (slideIndex >= 0) {
+      activeMobileSlideIndex.value = slideIndex
+    }
+  },
+)
 </script>
 
 <style scoped>
@@ -277,16 +330,19 @@ const mobileRoutes = computed(() => {
     min-width: 320px;
     overflow: hidden;
     color: #ffffff;
-    background: #041a26;
+    background:
+      linear-gradient(180deg, rgba(4, 26, 38, 0.06) 0%, rgba(4, 26, 38, 0.56) 58%, rgba(4, 26, 38, 0.84) 100%),
+      url('~/assets/img/waves.jpg') center 930px / auto 82% no-repeat,
+      #041a26;
     font-family: 'Jost', Arial, sans-serif;
   }
 
   .mobile-hero {
     display: flex;
-    min-height: 642px;
+    min-height: 936px;
     flex-direction: column;
     justify-content: space-between;
-    padding: 56px 18px 36px;
+    padding: 74px 18px 28px;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(3, 24, 38, 0.04) 58%, rgba(3, 24, 38, 0.34) 100%),
       url('~/assets/img/hero.jpg');
@@ -296,7 +352,7 @@ const mobileRoutes = computed(() => {
 
   .mobile-hero__title {
     position: relative;
-    height: 142px;
+    height: 205px;
   }
 
   .mobile-hero__heading {
@@ -304,9 +360,9 @@ const mobileRoutes = computed(() => {
     inset: 0;
     margin: 0;
     color: #ffffff;
-    font-size: clamp(56px, 17vw, 74px);
+    font-size: clamp(70px, 20vw, 88px);
     font-weight: 700;
-    line-height: 0.92;
+    line-height: 0.94;
     text-align: center;
     letter-spacing: 0;
     text-shadow: 8px 0 5px rgba(20, 57, 89, 0.34);
@@ -320,57 +376,57 @@ const mobileRoutes = computed(() => {
   }
 
   .mobile-hero__heading-small {
-    font-size: clamp(35px, 11vw, 48px);
-    line-height: 1.34;
+    font-size: clamp(44px, 13vw, 57px);
+    line-height: 1.28;
   }
 
   .mobile-hero__bottom {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 29px;
   }
 
   .mobile-hero__button {
     display: inline-flex;
-    min-width: 184px;
-    min-height: 51px;
+    min-width: 258px;
+    min-height: 64px;
     align-items: center;
     justify-content: center;
     padding: 7px 28px;
     border: 1px solid #284662;
-    border-radius: 13px;
+    border-radius: 17px;
     color: #284662;
     background: #ffffff;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.28);
-    font-size: 27px;
+    font-size: 34px;
     font-weight: 500;
     line-height: 1;
     text-decoration: none;
   }
 
   .mobile-hero__description {
-    width: min(330px, 100%);
+    width: min(390px, 100%);
     margin: 0;
     color: #ffffff;
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 500;
-    line-height: 1.35;
+    line-height: 1.52;
     text-align: center;
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.78);
   }
 
   .mobile-content {
     background:
-      linear-gradient(180deg, rgba(4, 26, 38, 0.08) 0%, rgba(4, 26, 38, 0.28) 46%, rgba(4, 26, 38, 0.64) 100%),
+      linear-gradient(180deg, rgba(4, 26, 38, 0.04) 0%, rgba(4, 26, 38, 0.24) 45%, rgba(4, 26, 38, 0.64) 100%),
       url('~/assets/img/waves.jpg');
     background-repeat: no-repeat;
-    background-size: auto 120%;
-    background-position: center -350px;
+    background-size: auto 100%;
+    background-position: center top;
   }
 
   .mobile-benefits {
-    padding: 27px 14px 52px;
+    padding: 31px 14px 14px;
     background:
       linear-gradient(180deg, rgba(8, 47, 70, 0.16) 0%, rgba(4, 28, 42, 0.24) 100%),
       url('~/assets/img/waves.jpg');
@@ -380,18 +436,22 @@ const mobileRoutes = computed(() => {
 
   .mobile-benefits__title {
     margin: 0;
-    color: #ffff00;
-    font-size: 28px;
+    color: #ffffff;
+    font-size: 37px;
     font-weight: 700;
     line-height: 1.12;
     text-align: center;
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.72);
   }
 
+  .mobile-benefits__title-accent {
+    color: #ffff00;
+  }
+
   .mobile-benefits__subtitle {
-    margin: 18px 0 18px;
+    margin: 28px 0 21px;
     color: #ffffff;
-    font-size: 17px;
+    font-size: 24px;
     font-weight: 500;
     line-height: 1.25;
     text-align: center;
@@ -400,14 +460,14 @@ const mobileRoutes = computed(() => {
 
   .mobile-benefits__list {
     display: grid;
-    gap: 20px;
+    gap: 31px;
     justify-items: center;
   }
 
   .mobile-benefit-card {
-    width: min(328px, calc(100vw - 48px));
-    min-height: 75px;
-    padding: 12px 18px 10px;
+    width: min(344px, calc(100vw - 48px));
+    min-height: 100px;
+    padding: 15px 18px 13px;
     border-radius: 8px;
     color: #284662;
     background: #ffffff;
@@ -418,22 +478,22 @@ const mobileRoutes = computed(() => {
   .mobile-benefit-card__title {
     margin: 0;
     color: #284662;
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 700;
     line-height: 1.18;
   }
 
   .mobile-benefit-card__text {
-    margin: 5px 0 0;
+    margin: 8px 0 0;
     color: #000000;
-    font-size: 8.5px;
+    font-size: 12px;
     font-weight: 400;
-    line-height: 1.28;
+    line-height: 1.38;
   }
 
   .mobile-routes {
     position: relative;
-    padding: 103px 21px 96px;
+    padding: 70px 20px 25px;
     background:
       linear-gradient(180deg, rgba(4, 26, 38, 0.24) 0%, rgba(4, 26, 38, 0.58) 100%),
       url('~/assets/img/waves.jpg');
@@ -455,76 +515,131 @@ const mobileRoutes = computed(() => {
     position: relative;
     margin: 0;
     color: #ffffff;
-    font-size: 30px;
+    font-size: 35px;
     font-weight: 500;
-    line-height: 1.24;
+    line-height: 1.35;
     text-align: center;
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.72);
   }
 
   .mobile-routes__list {
+    position: relative;
     display: grid;
-    gap: 34px;
-    margin-top: 42px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "viewport"
+      "dots";
+    align-items: start;
+    gap: 27px;
+    margin-top: 7px;
+  }
+
+  .mobile-routes__viewport {
+    grid-area: viewport;
+    height: 455px;
+    overflow: hidden;
+    border-radius: 7px;
+    box-shadow: none;
+  }
+
+  .mobile-routes__track {
+    display: flex;
+    align-items: flex-start;
+    transition: transform 320ms ease;
+    will-change: transform;
+  }
+
+  .mobile-route-slide {
+    display: flex;
+    min-width: 100%;
+    justify-content: center;
   }
 
   .mobile-route-item {
     display: grid;
     gap: 0;
-    justify-self: center;
-    width: min(212px, 62vw);
+    width: min(360px, 100%);
+    border-radius: 7px;
+    overflow: hidden;
+    transform: translateX(-22px);
   }
 
-  .mobile-route-item:nth-child(2) {
-    width: min(304px, calc(100vw - 34px));
-    justify-self: start;
+  .mobile-route-item--active {
+    outline: 0;
   }
 
-  .mobile-route-item:nth-child(3) {
-    width: min(228px, 66vw);
-    justify-self: end;
+  .mobile-routes__nav {
+    position: absolute;
+    z-index: 2;
+    top: 338px;
+    display: flex;
+    width: 54px;
+    height: 96px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 0;
+    color: #ffff66;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    cursor: pointer;
+    font-size: 78px;
+    font-weight: 300;
+    line-height: 1;
+    transform: translateY(-50%);
   }
 
-  .mobile-route-item:nth-child(4) {
-    width: min(359px, calc(100vw - 24px));
-    justify-self: center;
+  .mobile-routes__nav--prev {
+    left: -24px;
   }
 
-  .mobile-route-item--open {
-    gap: 0;
+  .mobile-routes__nav--next {
+    right: 6px;
+  }
+
+  .mobile-routes__dots {
+    display: flex;
+    grid-area: dots;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 0;
+  }
+
+  .mobile-routes__dot {
+    width: 9px;
+    height: 9px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: #ffff66;
+    cursor: pointer;
+    transition: width 180ms ease, background 180ms ease;
+  }
+
+  .mobile-routes__dot--active {
+    width: 16px;
+    height: 16px;
+    background: #ffff66;
   }
 
   .mobile-routes__button {
     display: inline-flex;
     width: 100%;
-    min-height: 46px;
+    min-height: auto;
     align-items: center;
     justify-self: stretch;
     gap: 8px;
-    padding: 11px 20px;
-    border: 0;
-    border-radius: 8px;
-    color: #000000;
-    background: #ffffff;
-    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.28);
-    cursor: pointer;
-  }
-
-  .mobile-route-item--open .mobile-routes__button {
-    min-height: auto;
-    //justify-content: center;
     padding: 18px 20px 10px;
+    border: 0;
     border-radius: 13px 13px 0 0;
     color: #ffffff;
     background: #214150;
     box-shadow: none;
+    cursor: pointer;
   }
 
   .mobile-routes__button--active {
-    outline: 2px solid rgba(255, 255, 255, 0.7);
-  }
-
-  .mobile-route-item--open .mobile-routes__button--active {
     outline: 0;
   }
 
@@ -534,14 +649,11 @@ const mobileRoutes = computed(() => {
     flex: 0 0 auto;
     border-top: 5px solid transparent;
     border-bottom: 5px solid transparent;
-    border-left: 8px solid #000000;
-  }
-
-  .mobile-route-item--open .mobile-routes__button-icon {
-    border-left-color: #ffffff;
+    border-left: 8px solid #ffffff;
   }
 
   .mobile-routes__button-text {
+    color: #ffffff;
     overflow-wrap: anywhere;
     font-size: 10px;
     font-weight: 700;
@@ -549,33 +661,27 @@ const mobileRoutes = computed(() => {
     text-transform: lowercase;
   }
 
-  .mobile-route-item--open .mobile-routes__button-text {
-    color: #ffffff;
-
-    text-transform: lowercase;
-  }
-
   .mobile-route-details {
     display: grid;
-    gap: 8px;
-    padding: 0 10px 18px;
-    border-radius: 0 0 13px 13px;
+    gap: 12px;
+    overflow: visible;
+    padding: 19px 16px 21px;
+    border-radius: 7px;
     color: #ffff92;
     background: #214150;
-    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.28);
   }
 
   .mobile-route-details__intro {
     margin: 0;
     color: #ffff92;
-    font-size: 16px;
+    font-size: 15.5px;
     font-weight: 300;
-    line-height: 1.22;
+    line-height: 1.44;
   }
 
   .mobile-route-detail {
     display: grid;
-    gap: 8px;
+    gap: 10px;
   }
 
   .mobile-route-detail__title {
@@ -583,26 +689,28 @@ const mobileRoutes = computed(() => {
     color: #ffffff;
     font-size: 18px;
     font-weight: 400;
-    line-height: 1.15;
+    line-height: 1.2;
+    text-align: center;
   }
 
   .mobile-route-detail__text {
     margin: 0;
     color: #ffff92;
-    font-size: 16px;
+    font-size: 15.5px;
     font-weight: 300;
-    line-height: 1.2;
+    line-height: 1.43;
   }
 
   .mobile-route-detail__image {
-    width: 100%;
+    width: 184px;
+    justify-self: center;
     aspect-ratio: 1 / 1;
-    border-radius: 5px;
+    border-radius: 11px;
     object-fit: cover;
   }
 
   .mobile-request {
-    padding: 28px 23px 24px;
+    padding: 31px 23px 35px;
     background:
       linear-gradient(180deg, rgba(4, 26, 38, 0.54) 0%, rgba(4, 26, 38, 0.72) 100%),
       url('~/assets/img/waves.jpg');
@@ -613,7 +721,7 @@ const mobileRoutes = computed(() => {
   .mobile-request-wave {
     display: flex;
     justify-content: center;
-    padding: 6px 0 0;
+    padding: 13px 0 0;
     overflow: hidden;
     background:
       linear-gradient(180deg, rgba(4, 26, 38, 0.58) 0%, rgba(4, 26, 38, 0.54) 100%),
@@ -632,26 +740,26 @@ const mobileRoutes = computed(() => {
   .mobile-contacts__title {
     margin: 0;
     color: #ffffff;
-    font-size: 29px;
+    font-size: 34px;
     font-weight: 500;
-    line-height: 1.28;
+    line-height: 1.31;
     text-align: center;
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.74);
   }
 
   .mobile-request__form {
     display: grid;
-    gap: 20px;
-    width: min(322px, 100%);
-    margin: 27px auto 0;
+    gap: 28px;
+    width: min(368px, 100%);
+    margin: 31px auto 0;
   }
 
   .mobile-request__field {
     display: flex;
-    min-height: 58px;
+    min-height: 67px;
     align-items: center;
     padding: 0 25px;
-    border-radius: 14px;
+    border-radius: 17px;
     background: #ffffff;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.22);
   }
@@ -665,7 +773,7 @@ const mobileRoutes = computed(() => {
     outline: 0;
     color: #000000;
     background: transparent;
-    font-size: 25px;
+    font-size: 29px;
     font-weight: 300;
     line-height: 1.2;
   }
@@ -676,20 +784,20 @@ const mobileRoutes = computed(() => {
   }
 
   .mobile-request__submit {
-    min-height: 58px;
+    min-height: 67px;
     border: 0;
-    border-radius: 14px;
+    border-radius: 17px;
     color: #000000;
     background: #ffff00;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.28);
-    font-size: 23px;
+    font-size: 29px;
     font-weight: 400;
     line-height: 1.2;
     cursor: pointer;
   }
 
   .mobile-contacts {
-    padding: 21px 23px 52px;
+    padding: 26px 23px 55px;
     background:
       linear-gradient(180deg, rgba(4, 26, 38, 0.72) 0%, rgba(4, 26, 38, 0.86) 100%),
       url('~/assets/img/waves.jpg');
@@ -699,21 +807,21 @@ const mobileRoutes = computed(() => {
 
   .mobile-contacts__links {
     display: grid;
-    gap: 13px;
-    width: min(274px, 100%);
-    margin: 25px auto 0;
+    gap: 15px;
+    width: min(300px, 100%);
+    margin: 29px auto 0;
   }
 
   .mobile-contacts__link {
     display: flex;
-    min-height: 48px;
+    min-height: 58px;
     align-items: center;
     justify-content: center;
     border: 1px solid rgba(255, 255, 255, 0.86);
     border-radius: 999px;
     color: #ffffff;
     background: rgba(40, 70, 98, 0.92);
-    font-size: 24px;
+    font-size: 30px;
     font-weight: 300;
     line-height: 1.2;
     text-decoration: none;

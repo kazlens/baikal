@@ -786,6 +786,8 @@ input:focus-visible {
 }
 
 .route-card {
+  max-height: 655px;
+  min-height: 655px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -795,8 +797,25 @@ input:focus-visible {
   flex: 1;
   background-color: #ffffff;
   border-radius: 10.4px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: #284662 rgba(40, 70, 98, 0.14);
+  scrollbar-width: thin;
   z-index: 1;
+}
+
+.route-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.route-card::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(40, 70, 98, 0.14);
+}
+
+.route-card::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #284662;
 }
 
 .route-card__item {
@@ -911,6 +930,7 @@ input:focus-visible {
   position: relative;
   align-self: stretch;
   width: 100%;
+  margin-top: auto;
   flex: 0 0 auto;
   border-radius: 10.4px;
 }

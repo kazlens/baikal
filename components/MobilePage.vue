@@ -646,7 +646,7 @@ watch(
   .mobile-routes__nav {
     position: absolute;
     z-index: 2;
-    top: 338px;
+    top: 248px;
     display: flex;
     width: 54px;
     height: 96px;
@@ -745,11 +745,22 @@ watch(
     border-radius: 7px;
     color: #ffff92;
     background: #214150;
-    scrollbar-width: none;
+    scrollbar-color: #ffff66 rgba(255, 255, 255, 0.16);
+    scrollbar-width: thin;
   }
 
   .mobile-route-details::-webkit-scrollbar {
-    display: none;
+    width: 6px;
+  }
+
+  .mobile-route-details::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .mobile-route-details::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #ffff66;
   }
 
   .mobile-route-details__intro {

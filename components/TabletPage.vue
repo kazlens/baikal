@@ -521,6 +521,7 @@ watch(
     grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
     width: 100%;
     height: 100%;
+    overflow-y: auto;
     padding: 15px 17px 12px;
     border-radius: 7px;
     color: #1f3c58;
@@ -532,7 +533,23 @@ watch(
       opacity 520ms ease,
       transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
       box-shadow 520ms ease;
+    scrollbar-color: #284662 rgba(40, 70, 98, 0.14);
+    scrollbar-width: thin;
     will-change: opacity, transform;
+  }
+
+  .tablet-route-card::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .tablet-route-card::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(40, 70, 98, 0.14);
+  }
+
+  .tablet-route-card::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #284662;
   }
 
   .tablet-route-slide.swiper-slide-active .tablet-route-card {
@@ -636,7 +653,7 @@ watch(
 
   .tablet-routes__nav {
     position: absolute;
-    top: 224px;
+    top: 174px;
     z-index: 2;
     display: grid;
     width: 70px;

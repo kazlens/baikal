@@ -60,42 +60,52 @@
           ‹
         </button>
 
-        <div class="mobile-routes__viewport">
-          <div class="mobile-routes__track" :style="{ transform: `translateX(-${activeMobileSlideIndex * 100}%)` }">
-            <article
-              v-for="route in mobileRoutes"
-              :key="route.tab"
-              class="mobile-route-slide"
-              :aria-hidden="route.index !== activeMobileRoute?.index"
+        <Swiper
+          class="mobile-routes__swiper"
+          :initial-slide="activeMobileSlideIndex"
+          :slides-per-view="1"
+          :speed="520"
+          :allow-touch-move="true"
+          :auto-height="false"
+          :grab-cursor="true"
+          :observer="true"
+          :observe-parents="true"
+          @swiper="onMobileSwiper"
+          @slide-change="onMobileSlideChange"
+        >
+          <SwiperSlide
+            v-for="route in mobileRoutes"
+            :key="route.tab"
+            class="mobile-route-slide"
+            :aria-hidden="route.index !== activeMobileRoute?.index"
+          >
+            <div
+              class="mobile-route-item"
+              :class="{ 'mobile-route-item--active': route.index === selectedRouteIndex }"
             >
-              <div
-                class="mobile-route-item"
-                :class="{ 'mobile-route-item--active': route.index === selectedRouteIndex }"
-              >
-                <div class="mobile-route-details">
-                  <p v-if="getRouteDetails(route.index)?.intro" class="mobile-route-details__intro">
-                    {{ getRouteDetails(route.index)?.intro }}
-                  </p>
+              <div class="mobile-route-details">
+                <p v-if="getRouteDetails(route.index)?.intro" class="mobile-route-details__intro">
+                  {{ getRouteDetails(route.index)?.intro }}
+                </p>
 
-                  <article
-                    v-for="item in getRouteDetails(route.index)?.items"
-                    :key="item.title"
-                    class="mobile-route-detail"
-                  >
-                    <h3 v-if="item.title" class="mobile-route-detail__title" v-html="item.title" />
-                    <img
-                      v-if="item.image"
-                      class="mobile-route-detail__image"
-                      :src="item.image"
-                      :alt="item.imageAlt"
-                    />
-                    <p class="mobile-route-detail__text">{{ item.text }}</p>
-                  </article>
-                </div>
+                <article
+                  v-for="item in getRouteDetails(route.index)?.items"
+                  :key="item.title"
+                  class="mobile-route-detail"
+                >
+                  <h3 v-if="item.title" class="mobile-route-detail__title" v-html="item.title" />
+                  <img
+                    v-if="item.image"
+                    class="mobile-route-detail__image"
+                    :src="item.image"
+                    :alt="item.imageAlt"
+                  />
+                  <p class="mobile-route-detail__text">{{ item.text }}</p>
+                </article>
               </div>
-            </article>
-          </div>
-        </div>
+            </div>
+          </SwiperSlide>
+        </Swiper>
 
         <button class="mobile-routes__nav mobile-routes__nav--next" type="button" aria-label="Следующий маршрут" @click="showNextRoute">
           ›
@@ -161,6 +171,10 @@
 </template>
 
 <script setup lang="ts">
+import type { Swiper as SwiperInstance } from 'swiper'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import 'swiper/css'
+
 import argadaRiverImage from '~/assets/img/argada-river.jpg'
 import baikalValleyImage from '~/assets/img/baikal-valley.jpg'
 import sergePillarsImage from '~/assets/img/serge-pillars.png'
@@ -202,6 +216,8 @@ const emit = defineEmits<{
 }>()
 
 const activeMobileSlideIndex = ref(1)
+const mobileSwiper = shallowRef<SwiperInstance | null>(null)
+const isMobileSwiperReady = ref(false)
 
 const mobileRouteDetails: Record<number, MobileRouteDetail> = {
   0: {
@@ -277,18 +293,37 @@ const mobileRoutes = computed(() => {
 
 const activeMobileRoute = computed(() => mobileRoutes.value[activeMobileSlideIndex.value])
 
-const showRouteSlide = (slideIndex: number) => {
+const getBoundedMobileSlideIndex = (slideIndex: number) => {
+  const maxIndex = mobileRoutes.value.length - 1
+  return Math.min(Math.max(slideIndex, 0), maxIndex)
+}
+
+const updateMobileRouteSelection = (slideIndex: number) => {
   if (!mobileRoutes.value.length) {
     return
   }
 
-  const maxIndex = mobileRoutes.value.length - 1
-  activeMobileSlideIndex.value = Math.min(Math.max(slideIndex, 0), maxIndex)
+  activeMobileSlideIndex.value = getBoundedMobileSlideIndex(slideIndex)
 
   const route = activeMobileRoute.value
-  if (route) {
+  if (route && props.selectedRouteIndex !== route.index) {
     emit('selectRoute', route.index)
   }
+}
+
+const showRouteSlide = (slideIndex: number, speed = 520) => {
+  if (!mobileRoutes.value.length) {
+    return
+  }
+
+  const nextSlideIndex = getBoundedMobileSlideIndex(slideIndex)
+
+  if (mobileSwiper.value && mobileSwiper.value.activeIndex !== nextSlideIndex) {
+    mobileSwiper.value.slideTo(nextSlideIndex, speed)
+    return
+  }
+
+  updateMobileRouteSelection(nextSlideIndex)
 }
 
 const showPrevRoute = () => {
@@ -307,14 +342,34 @@ const showNextRoute = () => {
   showRouteSlide((activeMobileSlideIndex.value + 1) % mobileRoutes.value.length)
 }
 
+const onMobileSwiper = (swiper: SwiperInstance) => {
+  mobileSwiper.value = swiper
+  requestAnimationFrame(() => {
+    swiper.update()
+    swiper.slideTo(activeMobileSlideIndex.value, 0)
+    isMobileSwiperReady.value = true
+    updateMobileRouteSelection(activeMobileSlideIndex.value)
+  })
+}
+
+const onMobileSlideChange = (swiper: SwiperInstance) => {
+  if (!isMobileSwiperReady.value) {
+    return
+  }
+
+  updateMobileRouteSelection(swiper.activeIndex)
+}
+
 watch(
   () => props.selectedRouteIndex,
   (index) => {
     const slideIndex = mobileRoutes.value.findIndex((route) => route.index === index)
     if (slideIndex >= 0) {
       activeMobileSlideIndex.value = slideIndex
+      mobileSwiper.value?.slideTo(slideIndex, 0)
     }
   },
+  { immediate: true },
 )
 </script>
 
@@ -534,24 +589,23 @@ watch(
     margin-top: 7px;
   }
 
-  .mobile-routes__viewport {
+  .mobile-routes__swiper {
     grid-area: viewport;
-    height: 455px;
+    width: min(272px, calc(100vw - 104px));
+    height: 515px;
+    justify-self: center;
     overflow: hidden;
     border-radius: 7px;
     box-shadow: none;
   }
 
-  .mobile-routes__track {
-    display: flex;
-    align-items: flex-start;
-    transition: transform 320ms ease;
-    will-change: transform;
+  .mobile-routes__swiper :deep(.swiper-wrapper) {
+    align-items: stretch;
   }
 
   .mobile-route-slide {
     display: flex;
-    min-width: 100%;
+    height: 100%;
     justify-content: center;
   }
 
@@ -559,9 +613,30 @@ watch(
     display: grid;
     gap: 0;
     width: min(360px, 100%);
+    max-height: 100%;
     border-radius: 7px;
     overflow: hidden;
-    transform: translateX(-22px);
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+    transition:
+      opacity 520ms ease,
+      transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .mobile-route-slide.swiper-slide-active .mobile-route-item {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .mobile-route-slide.swiper-slide-prev .mobile-route-item {
+    opacity: 0.42;
+    transform: translateX(-10px) scale(0.94);
+  }
+
+  .mobile-route-slide.swiper-slide-next .mobile-route-item {
+    opacity: 0.42;
+    transform: translateX(10px) scale(0.94);
   }
 
   .mobile-route-item--active {
@@ -664,11 +739,17 @@ watch(
   .mobile-route-details {
     display: grid;
     gap: 12px;
-    overflow: visible;
+    max-height: 515px;
+    overflow-y: auto;
     padding: 19px 16px 21px;
     border-radius: 7px;
     color: #ffff92;
     background: #214150;
+    scrollbar-width: none;
+  }
+
+  .mobile-route-details::-webkit-scrollbar {
+    display: none;
   }
 
   .mobile-route-details__intro {

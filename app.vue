@@ -144,11 +144,18 @@
       :selected-route-index="selectedRouteIndex"
       @select-route="selectRoute"
     />
+    <TabletPage
+      :benefits="benefits"
+      :routes="routes"
+      :selected-route-index="selectedRouteIndex"
+      @select-route="selectRoute"
+    />
   </main>
 </template>
 
 <script setup lang="ts">
 import MobilePage from '~/components/MobilePage.vue'
+import TabletPage from '~/components/TabletPage.vue'
 import cruiseDunesImage from '~/assets/img/cruise-5-days.png'
 import expeditionImage from '~/assets/img/route-expedition.png'
 import riverImage from '~/assets/img/route-river.jpg'
@@ -1139,6 +1146,15 @@ input:focus-visible {
     width: 100%;
     min-height: 608px;
     flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 540px) and (max-width: 1056px) {
+  .hero,
+  .benefits,
+  .routes,
+  .contact {
+    display: none;
   }
 }
 

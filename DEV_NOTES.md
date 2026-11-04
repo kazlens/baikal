@@ -5,8 +5,9 @@
 1. Контекст: блок выбора маршрута в мобильной и планшетной версиях.
 
    Компоненты:
-   - `components/MobilePage.vue`
-   - `components/TabletPage.vue`
+   - `app/components/mobile/MobileRoutes.vue`
+   - `app/components/tablet/TabletRoutes.vue`
+   - общая логика: `app/composables/useRouteCarousel.ts`
 
 2. Реализация: используем `Swiper` / `SwiperSlide` из `swiper/vue`.
 
@@ -52,14 +53,14 @@
 
 5. Состояние и синхронизация:
 
-   Активный слайд синхронизируется с `selectedRouteIndex`.
+   Активный слайд синхронизируется с `selectedRouteId` из `useRouteSelection()`.
 
    Смена возможна через:
    - свайп
    - стрелки
    - точки
 
-   На старте используется guard `isMobileSwiperReady` / `isTabletSwiperReady`, чтобы Swiper не сбрасывал активный маршрут во время первичной инициализации.
+   На старте используется guard `isSwiperReady`, чтобы Swiper не сбрасывал активный маршрут во время первичной инициализации.
 
 6. Доступность:
 

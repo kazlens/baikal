@@ -2,15 +2,15 @@
 
 ## Структура компонентов
 
-`app.vue` → `components/views/*View.vue` (версия страницы под экран, переключается через CSS) → секции из `components/desktop`, `tablet`, `mobile` → `components/shared` и `components/icons`.
+`app.vue` → `views/DesktopView`, `TabletView`, `MobileView` (версия страницы под экран, переключается через CSS). Внутри папки лежит сам `*View.vue`, а в её `components/` его секции. Общие части: `components/shared` и `components/icons`.
 
 ## Slider - Routes
 
 1. Контекст: блок выбора маршрута в мобильной и планшетной версиях.
 
    Компоненты:
-   - `app/components/mobile/MobileRoutes.vue`
-   - `app/components/tablet/TabletRoutes.vue`
+   - `app/views/MobileView/components/MobileRoutes.vue`
+   - `app/views/TabletView/components/TabletRoutes.vue`
    - общая логика: `app/composables/useRouteCarousel.ts`
 
 2. Реализация: используем `Swiper` / `SwiperSlide` из `swiper/vue`.

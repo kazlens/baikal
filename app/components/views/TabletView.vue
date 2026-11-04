@@ -1,5 +1,5 @@
 <template>
-  <div class="tablet-page" aria-label="Планшетная версия страницы">
+  <div class="tablet-view" aria-label="Планшетная версия страницы">
     <TabletHero />
     <TabletBenefits />
     <TabletRoutes />
@@ -8,12 +8,12 @@
 </template>
 
 <style scoped>
-.tablet-page {
+.tablet-view {
   display: none;
 }
 
 @media (min-width: 540px) and (max-width: 1056px) {
-  .tablet-page {
+  .tablet-view {
     display: block;
     width: 100%;
     min-width: 540px;

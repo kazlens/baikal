@@ -1,8 +1,8 @@
 <template>
   <main class="page">
-    <DesktopPage />
-    <MobilePage />
-    <TabletPage />
+    <DesktopView />
+    <MobileView />
+    <TabletView />
   </main>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="desktop-page">
+  <div class="desktop-view">
     <DesktopHero />
     <DesktopBenefits />
     <DesktopRoutes />
@@ -8,12 +8,12 @@
 </template>
 
 <style scoped>
-.desktop-page {
+.desktop-view {
   display: contents;
 }
 
 @media (max-width: 1056px) {
-  .desktop-page {
+  .desktop-view {
     display: none;
   }
 }

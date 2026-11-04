@@ -1,5 +1,5 @@
 <template>
-  <div class="mobile-page" aria-label="Мобильная версия страницы">
+  <div class="mobile-view" aria-label="Мобильная версия страницы">
     <MobileHero />
 
     <div class="mobile-content">
@@ -12,12 +12,12 @@
 </template>
 
 <style scoped>
-.mobile-page {
+.mobile-view {
   display: none;
 }
 
 @media (max-width: 539px) {
-  .mobile-page {
+  .mobile-view {
     display: block;
     width: 100%;
     min-width: 320px;

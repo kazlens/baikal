@@ -1,5 +1,9 @@
 # Dev Notes
 
+## Структура компонентов
+
+`app.vue` → `components/views/*View.vue` (версия страницы под экран, переключается через CSS) → секции из `components/desktop`, `tablet`, `mobile` → `components/shared` и `components/icons`.
+
 ## Slider - Routes
 
 1. Контекст: блок выбора маршрута в мобильной и планшетной версиях.
